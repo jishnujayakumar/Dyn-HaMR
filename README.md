@@ -26,7 +26,7 @@
     </a>
     <a href='https://dyn-hamr.github.io/'>
       <img src='https://img.shields.io/badge/Project-Page-blue?style=flat&logo=Google%20chrome&logoColor=blue'></a>
-    <a href='https://youtu.be/'>
+    <a href='https://youtu.be/n25NGIWiA7M'>
       <img src='https://img.shields.io/badge/YouTube-Video-EA3323?style=flat&logo=youtube&logoColor=EA3323'></a>
       <img src="https://visitor-badge.laobi.icu/badge?page_id=ZhengdiYu.Dyn-HaMR&left_color=gray&right_color=orange">
     </a>

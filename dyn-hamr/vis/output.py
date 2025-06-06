@@ -38,7 +38,7 @@ def prep_result_vis(res, vis_mask, track_ids, body_model, temporal_smooth):
             res["is_right"],
             res.get("betas", None),
         )
-    # print(res["is_right"])
+
     T_w2c = None
     floor_plane = None
     if "cam_R" in res and "cam_t" in res:
@@ -76,8 +76,34 @@ def build_scene_dict(
 
     scene_dict["cameras"] = {
         "src_cam": T_c2w,
-        "front": torch.einsum("ij,...jk->...ik", T, T_c2w),
+        # "front": torch.einsum("ij,...jk->...ik", T, T_c2w),
     }
+
+    # Create ground plane based on hand mesh height
+    verts = scene_dict["geometry"][0]  # Get vertices from geometry
+    if len(verts) > 0:
+        # Find minimum height across all frames and vertices
+        min_height = float('inf')
+        for frame_verts in verts:
+            if len(frame_verts) > 0:
+                frame_min = frame_verts[..., 1].min().item()  # y-coordinate is height
+                min_height = min(min_height, frame_min)
+        
+        # Set ground plane further below minimum height
+        ground_offset = -0.5  # 20cm below minimum height
+        ground_height = min_height - ground_offset
+        
+        # Create ground plane transform
+        R = torch.eye(3)  # Identity rotation (flat ground)
+        t = torch.tensor([0.0, ground_height, 0.0])  # Translate to ground height
+        scene_dict["ground"] = cam_util.make_4x4_pose(R, t)
+
+        # Save ground mesh for Blender debugging
+        import trimesh
+        from vis.viewer import make_checkerboard
+        ground_mesh = make_checkerboard(color0=[0.9, 0.95, 1.0], color1=[0.7, 0.8, 0.85], up="y", alpha=1.0)
+        ground_mesh.apply_translation([0.0, ground_height, 0.0])
+        ground_mesh.export("ground_debug.obj")
 
     # if floor_plane is not None:
     #     # compute the ground transform
@@ -92,28 +118,29 @@ def build_scene_dict(
     return scene_dict
 
 
-def render_scene_dict(renderer, scene_dict, out_name, fps=30, **kwargs):
-    # lists of T (B, V, 3), (B, 3), (F, 3)
-    verts, colors, faces, bounds = scene_dict["geometry"]
-    print("NUM VERTS", len(verts))
+# def render_scene_dict(renderer, scene_dict, out_name, fps=30, **kwargs):
+#     # lists of T (B, V, 3), (B, 3), (F, 3)
+#     verts, colors, faces, bounds = scene_dict["geometry"]
+#     print("NUM VERTS", len(verts))
 
-    # add a top view
-    scene_dict["cameras"]["above"] = cam_util.make_4x4_pose(
-        torch.eye(3), torch.tensor([0, 0, -10])
-    )[None]
+#     # add a top view
+#     scene_dict["cameras"]["above"] = cam_util.make_4x4_pose(
+#         torch.eye(3), torch.tensor([0, 0, -10])
+#     )[None]
 
-    for cam_name, cam_poses in scene_dict["cameras"].items():
-        print("rendering scene for", cam_name)
-        # cam_poses are (T, 4, 4)
-        render_bg = cam_name == "src_cam"
-        ground_pose = scene_dict.get("ground", None)
-        frames = renderer.render_video(
-            cam_poses[None], verts, faces, colors, render_bg, ground_pose=ground_pose
-        )
-        os.makedirs(f"{out_name}_{cam_name}/", exist_ok=True)
-        for idx, i in enumerate(frames):
-            imageio.imwrite(f"{out_name}_{cam_name}/" + f'{str(idx).zfill(6)}.jpg', i)
-        imageio.mimwrite(f"{out_name}_{cam_name}.mp4", frames, fps=fps)
+#     for cam_name, cam_poses in scene_dict["cameras"].items():
+#         print("rendering scene for", cam_name)
+#         # cam_poses are (T, 4, 4)
+#         render_bg = cam_name == "src_cam"
+#         ground_pose = scene_dict.get("ground", None)
+#         print(cam_name, ground_pose)
+#         frames = renderer.render_video(
+#             cam_poses[None], verts, faces, colors, render_bg, ground_pose=ground_pose
+#         )
+#         os.makedirs(f"{out_name}_{cam_name}/", exist_ok=True)
+#         for idx, i in enumerate(frames):
+#             imageio.imwrite(f"{out_name}_{cam_name}/" + f'{str(idx).zfill(6)}.jpg', i)
+#         imageio.mimwrite(f"{out_name}_{cam_name}.mp4", frames, fps=fps)
 
 
 def animate_scene(
@@ -208,6 +235,21 @@ def build_pyrender_scene(
         scene["cameras"]["above"] = top_pose[None]
     if "side" in render_views:
         scene["cameras"]["side"] = side_pose[None]
+    if "front" in render_views:
+        # Use a static front camera: place it in front of the hand mesh, looking at the center
+        # Place the camera at a fixed distance along the -z axis from the center
+        if bounds is not None:
+            bb_min, bb_max, center = bounds
+            length = torch.abs(bb_max - bb_min).max()
+            front_offset = 1.0  # 1 closer, 2 farther
+            front_source = center + torch.tensor([0.0, -0.5, -front_offset])
+            front_target = center
+            up = torch.tensor([0.0, 1, 0.0])
+            front_pose = cam_util.lookat_matrix(front_source, front_target, up)
+            scene["cameras"]["front"] = front_pose[None]
+        else:
+            # fallback to previous behavior if bounds not available
+            pass
 
     # accumulate meshes if possible (can only accumulate for static camera)
     moving_cam = "src_cam" in render_views or "front" in render_views
@@ -245,11 +287,11 @@ def build_pyrender_scene(
             vis.add_mesh_frame(meshes, debug=debug)
 
     # add camera markers
-    if render_cam:
-        if accumulate:
-            vis.add_camera_markers_static(src_cams[::skip])
-        else:
-            vis.add_camera_markers(src_cams[::skip])
+    # if render_cam:
+    #     if accumulate:
+    #         vis.add_camera_markers_static(src_cams[::skip])
+    #     else:
+    #         vis.add_camera_markers(src_cams[::skip])
 
     return scene
 

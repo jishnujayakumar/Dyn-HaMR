@@ -67,7 +67,7 @@ class AnimationBase(object):
         # set the ground with Z up
         self.ground_pose = np.eye(4)
         ground = pyrender.Mesh.from_trimesh(
-            make_checkerboard(up="y", alpha=1.0), smooth=False
+            make_checkerboard(color0=[0.9, 0.95, 1.0], color1=[0.7, 0.8, 0.85], up="y", alpha=1.0), smooth=False
         )
         self.ground_node = self.scene.add(ground, name="ground", pose=self.ground_pose)
         self.cam_node = self.scene.add(self.camera, name="camera")

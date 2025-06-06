@@ -28,6 +28,8 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+test/images/
+test/dynhamr/
 develop-eggs/
 dist/
 downloads/

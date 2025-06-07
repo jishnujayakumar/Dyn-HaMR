@@ -58,7 +58,10 @@ def process_seq(
     res_root = f"{out_root}/{out_name}/{seq}"
     os.makedirs(res_root, exist_ok=True)
     res_dir = os.path.join(res_root, "results")
+    os.makedirs(res_dir, exist_ok=True)
     res_path = f"{res_root}/{name}.pkl"
+
+    import pdb; pdb.set_trace()
 
     if overwrite or not os.path.isfile(res_path):
         res = launch_hamer(gpus, seq, img_dir, res_dir, name, datatype, overwrite)

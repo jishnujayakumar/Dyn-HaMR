@@ -2,16 +2,16 @@
 set -e
 
 echo "Creating virtual environment"
-python3.10 -m venv .dynhamr
+python -m venv .dynhamr
 echo "Activating virtual environment"
-
+export CUDA_HOME=/usr/local/cuda-11.3/
 source $PWD/.dynhamr/bin/activate
 
 # install pytorch
-$PWD/.dynhamr/bin/pip install torch==1.13.0 torchvision==0.14.0 --index-url https://download.pytorch.org/whl/cu117
+pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu113
 
 # torch-scatter
-$PWD/.dynhamr/bin/pip install torch-scatter -f https://data.pyg.org/whl/torch-1.13.0+cu117.html
+$PWD/.dynhamr/bin/pip install torch-scatter -f https://data.pyg.org/whl/torch-1.12.1+cu113.html
 
 # install source
 $PWD/.dynhamr/bin/pip install -e .

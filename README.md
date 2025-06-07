@@ -124,6 +124,8 @@ Please follow the instructions [here](https://github.com/MengHao666/Hand-BMC-pyt
 |   |-- PHI_min.npy
 ```
 
+
+
 > [!NOTE]
 > If accurate camera parameters are available, please follow the format of `Dyn-HaMR/test/dynhamr/cameras/demo/shot-0/cameras.npz` to prepare the camera parameters for loading. Similarly, you can use Dyn-HaMR to refine and recover the hand mesh in the world coordinate system initializing from your own 2D & 3D motion data.
 
@@ -174,3 +176,10 @@ Please see [License](https://github.com/ZhengdiYu/Dyn-HaMR/blob/main/LICENSE) fo
 
 ## Contact
 For any technical questions, please contact z.yu23@imperial.ac.uk or ZhengdiYu@hotmail.com.
+
+
+
+
+```
+pip install torch-scatter -f https://data.pyg.org/whl/torch-2.7.0+cu126.html
+```

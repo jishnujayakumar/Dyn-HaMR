@@ -5,7 +5,7 @@ defaults:
 
 model:
   use_init: True
-  opt_cams: False #True
+  opt_cams: True #default was False
   opt_scale: True
   async_tracks: True
 

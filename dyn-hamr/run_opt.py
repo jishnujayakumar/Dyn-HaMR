@@ -123,6 +123,8 @@ def run_opt(cfg, dataset, out_dir, device):
         B, T, hand_model, pose_prior, **margs
     )
 
+    # import pdb; pdb.set_trace()
+
     base_model.initialize(obs_data, cam_data)
     base_model.to(device)
 

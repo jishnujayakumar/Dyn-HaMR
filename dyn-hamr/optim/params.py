@@ -137,7 +137,7 @@ class CameraParams(Params):
         cam_R, cam_t = self._cam_R, self._cam_t
         print('get_extrinsics')
         if self.opt_cams:
-            raise ValueError
+            # raise ValueError
             print('self.opt_cams:', self.opt_cams)
             # raise ValueError
             dR = batch_rodrigues(self.delta_cam_R)
